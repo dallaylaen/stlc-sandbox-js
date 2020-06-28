@@ -27,6 +27,11 @@ class Type {
                 throw new Error("Arg type "+args[i].type.name+" != "+types[i]+" in "+this.name+"."+sub+"["+i+"]");
         };
     };
+    eq (other) {
+        if (!other instanceof Type)
+            throw "Attempt to compare Type with a non-type";
+        return this.name === other.name; // silly
+    };
 };
 
 class Var {
@@ -40,6 +45,22 @@ class Var {
     toString() {
         return this.type+"."+this.subtype
             +args.length ? "<"+args.map( x => x.toString() ).join(", ")+">" : "";
+    };
+    eq (other) {
+        if (!other instanceof Var)
+            throw new Error("can't compare Var to a non-Var");
+        if (this.type !== other.type)
+            return false;
+        if (this.sub !== other.sub)
+            return false;
+        for (let i in this.args) {
+            if (!this.args[i].eq(other.args[i]))
+                return false;
+        };
+        return true;
+    };
+    eval(context) {
+        return this;
     };
 };
 
@@ -73,6 +94,122 @@ class Universe {
     };
 };
 
+class Expr {
+    constructor(u, type) {
+        this.u    = u;
+        this.type = u.type(type);
+        this.deps = {};
+    };
+    fetchDeps(list) {
+        for (let item of list) {
+            for (let i in item.deps) {
+                if (this.deps[i]) {
+                    if (this.deps[i] != item.deps[i])
+                        throw new Error("Inconsistent free var types!");
+                } else {
+                    this.deps[i] = item.deps[i];
+                };
+            };
+        };
+    };
+    check(context) {
+        for( let i in this.deps ) {
+            if (!context[i] || context[i].type !== this.deps[i] )
+                throw new Error("Unsatisfied dependency "+i);
+        };
+    };
+    depStr() {
+        const list = Object.keys( this.deps );
+        const deps = list.sort().map( i=>i+":"+this.deps[i] ).join(",");
+        return this.type + (deps ? "{"+deps+"}" : "");
+    };
+    eval() {
+        throw new Error("unimplemented eval in Expr");
+    };
+    toString() {
+        return depStr() + "<...>";
+    };
+};
 
-module.exports.Universe = Universe;
-module.exports.Type = Type;
+class ExprFree extends Expr {
+    constructor( u, type, name ) {
+        super( u, type );
+        this.name = name;
+        this.deps[name] = u.type(type);
+    };
+    eval(context) {
+        this.check(context);
+        return context[ this.name ];
+    };
+    toString() {
+        return this.name + ":" + this.type;
+    };
+};
+
+class ExprCons extends Expr{
+    constructor( u, type, sub, ...args ) {
+        super( u, type );
+        this.sub = sub;
+        // TODO check type! (universe?)
+        this.args = args;
+    };
+
+    eval(context) {
+        this.check(context);
+        return new Var( this.type, this.sub, this.args.map( x=>x.eval(context) ) );
+    };
+};
+
+class Func {
+    constructor( args, impl ) {
+        this.args = args;
+        this.impl = impl;
+    };
+
+    apply(prevContext, args) {
+        // TODO check args
+        const context = { ...prevContext };
+        for ( let i in this.args ) {
+            context[ this.args[i][0] ] = args[i];
+        };
+        return this.impl.eval( context );
+    };
+};
+
+class ExprApply extends Expr {
+    constructor( u, type, func, args ) {
+        super( u, type );
+        this.func = func;
+        this.args = args;
+    };
+    eval (context) {
+        return this.func.apply( context, this.args.map( x => x.eval(context) ) )
+    };
+};
+
+class ExprMatch extends Expr {
+    constructor( u, type, mapping, arg ) {
+        super( u, type );
+        // TODO check type, mapping keys == arg.type subs
+        // mapping values == functions with needed args
+        this.mapping = mapping;
+        this.arg = arg;
+    };
+
+    eval(context) {
+        const cond = this.arg.eval( context );
+        this.mapping[ cond.sub ].apply( context, cond.args );
+    };
+};
+
+module.exports = {
+    Expr,
+    ExprApply,
+    ExprCons,
+    ExprFree,
+    ExprMatch,
+    Func,
+    Type,
+    Universe,
+    Var,
+};

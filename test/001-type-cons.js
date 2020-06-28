@@ -48,7 +48,21 @@ describe( 'Universe', () => {
         const zero = u.create( 'nat', 'zero' );
         const one  = u.create( 'nat', 'next', zero );
 
-        
+        done();
+    });
+
+    it( 'can compare vars', done => {
+        const u = new Universe();
+        u.addType( 'nat' ).addCons('zero').addCons('next', 'nat');
+
+        const zero = u.create( 'nat', 'zero' );
+        const one  = u.create( 'nat', 'next', zero );
+        const two  = u.create( 'nat', 'next', one );
+        const zwei = u.create( 'nat', 'next', one );
+
+        expect( zero.eq(one) ).to.equal( false );
+        expect(  one.eq(one) ).to.equal( true );
+        expect( zwei.eq(two) ).to.equal( true );
 
         done();
     });
