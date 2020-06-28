@@ -10,6 +10,8 @@ class Type {
         return this;
     };
     cons(sub) {
+        if( !this.subtypes[sub] )
+            throw new Error('Unknown cons '+this.name+'.'+sub);
         return this.subtypes[sub];
     };
     list() {
@@ -34,8 +36,8 @@ class Universe {
     check() {
         for( let name in this.types ) {
             const type = this.types[name];
-            for( let sub in type.cons ) {
-                for( let arg of type.cons[sub] ) {
+            for( let sub of type.list() ) {
+                for( let arg of type.cons(sub) ) {
                     if ( !this.types[arg] )
                         throw new Error("Unknown type '"+arg+"' used in constructor '"+name+"."+sub+"'");
                 };

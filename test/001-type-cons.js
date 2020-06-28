@@ -32,4 +32,12 @@ describe( 'Universe', () => {
         u.check();
         done();
     });
+
+    it( 'has consistency check', done => {
+        const u = new Universe();
+        u.addType('complex').addCons('z', 'double', 'double');
+        expect( _ => { u.check() } ).to.throw(/Unknown.*double.*complex.z/);
+
+        done();
+    });
 });
