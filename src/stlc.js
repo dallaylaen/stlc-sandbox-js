@@ -96,6 +96,9 @@ class Universe {
     freeVar(type, name) {
         return new ExprFree( this, type, name );
     };
+    func(args, impl) {
+        return new Func(args.map( x => [x[0], this.type(x[1])] ), impl);
+    };
 };
 
 class Expr {
@@ -182,7 +185,9 @@ class Func {
     };
 
     apply(prevContext, args) {
-        // TODO check args
+        // TODO better args checking
+        if (!Array.isArray(args))
+            throw new Error("Bad arguments, must be Func.apply( {...context}, [...args] )");
         const context = { ...prevContext };
         for ( let i in this.args ) {
             context[ this.args[i][0] ] = args[i];

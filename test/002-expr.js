@@ -61,6 +61,26 @@ describe ('Expr', () => {
 
         done();
     });
+
+    it ('can pattern-match even better', done => {
+        const prev = u.func( [['x', 'nat']], new stlc.ExprMatch(
+            u,
+            'nat',
+            u.freeVar( 'nat', 'x' ),
+            {
+                zero: u.func([], uZero),
+                next: u.func([['n', 'nat']], u.freeVar('nat', 'n')),
+            }
+        ));
+
+        is( prev.apply({}, [uZero]), uZero );
+        is( prev.apply({}, [uOne]), uZero );
+        is( prev.apply({}, [uTwo]), uOne );
+
+        done();
+    });
 });
 
-
+function is(got, exp) {
+    expect( exp.eq(got) ).to.equal(true);
+};
