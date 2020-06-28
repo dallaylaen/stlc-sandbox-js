@@ -3,7 +3,7 @@ const chai = require('chai');
 const should = chai.should();
 const expect = chai.expect;
 
-const { Universe, Type } = require( '../src/stlc.js' );
+const { Universe, Type, Var } = require( '../src/stlc.js' );
 
 describe( 'Universe', () => {
     it( 'allows to create types', done => {
@@ -37,6 +37,18 @@ describe( 'Universe', () => {
         const u = new Universe();
         u.addType('complex').addCons('z', 'double', 'double');
         expect( _ => { u.check() } ).to.throw(/Unknown.*double.*complex.z/);
+
+        done();
+    });
+
+    it( 'can create vars', done => {
+        const u = new Universe();
+        u.addType( 'nat' ).addCons('zero').addCons('next', 'nat');
+
+        const zero = u.create( 'nat', 'zero' );
+        const one  = u.create( 'nat', 'next', zero );
+
+        
 
         done();
     });
