@@ -4,6 +4,7 @@ class Type {
     constructor(name) {
         this.name = name;
         this.subtypes = {};
+        this.type = this; // hack to allow foo.type
     };
     addCons(sub, ...args) {
         this.subtypes[sub] = args;
@@ -28,7 +29,7 @@ class Type {
         };
     };
     eq (other) {
-        if (!other instanceof Type)
+        if (!(other instanceof Type))
             throw "Attempt to compare Type with a non-type";
         return this.name === other.name; // silly
     };
@@ -47,7 +48,7 @@ class Var {
             +args.length ? "<"+args.map( x => x.toString() ).join(", ")+">" : "";
     };
     eq (other) {
-        if (!other instanceof Var)
+        if (!(other instanceof Var))
             throw new Error("can't compare Var to a non-Var");
         if (this.type !== other.type)
             return false;
@@ -91,6 +92,9 @@ class Universe {
     };
     create(type, sub, ...args) {
         return new Var( this.types[type], sub, args );
+    };
+    freeVar(type, name) {
+        return new ExprFree( this, type, name );
     };
 };
 
@@ -162,8 +166,19 @@ class ExprCons extends Expr{
 
 class Func {
     constructor( args, impl ) {
+        for( let arg of args ) {
+            if (!Array.isArray(arg) || arg.length != 2)
+                throw new Error("Array of pairs expected");
+            if (!(arg[1] instanceof Type))
+                throw new Error("Func: types expected");
+        };
+
         this.args = args;
         this.impl = impl;
+        this.type = impl.type;
+    };
+    signature() {
+        return this.args.map( x => x[1] );
     };
 
     apply(prevContext, args) {
@@ -188,17 +203,22 @@ class ExprApply extends Expr {
 };
 
 class ExprMatch extends Expr {
-    constructor( u, type, mapping, arg ) {
+    constructor( u, type, arg, mapping ) {
         super( u, type );
-        // TODO check type, mapping keys == arg.type subs
-        // mapping values == functions with needed args
+
+        const T = arg.type;
+        for (let sub of T.list()) {
+            if (!mapping[sub] || !(mapping[sub] instanceof Func))
+                throw new Error("No mapping found in pattern match for sub "+sub);
+            T.check( sub, mapping[sub].signature() );
+        };
         this.mapping = mapping;
         this.arg = arg;
     };
 
     eval(context) {
         const cond = this.arg.eval( context );
-        this.mapping[ cond.sub ].apply( context, cond.args );
+        return this.mapping[ cond.sub ].apply( context, cond.args );
     };
 };
 
