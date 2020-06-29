@@ -30,6 +30,8 @@ describe ('Expr', () => {
     it( 'can eval a free variable to itself', done => {
         const expr = new stlc.ExprFree( u, 'nat', 'foo');
 
+        expect( expr.toString() ).to.equal('foo:nat');
+
         expect( () => { expr.eval({}) } ).to.throw(/Unsatisfied/);
         const one = expr.eval( { foo : uOne } );
         expect( one.eq(uOne) ).to.equal( true );
@@ -40,6 +42,8 @@ describe ('Expr', () => {
     it( 'can eval an expr dependent on free var', done => {
         const foo = new stlc.ExprFree( u, 'nat', 'foo' );
         const expr = new stlc.ExprCons( u, 'nat', 'next', foo );
+
+        expect(expr.toString()).to.equal('nat{foo:nat}<...>');
 
         expect( () => { expr.eval({}) } ).to.throw(/Unsatisfied/);
         const one = expr.eval( { foo : uZero } );

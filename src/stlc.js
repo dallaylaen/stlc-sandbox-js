@@ -115,7 +115,7 @@ class Expr {
         for (let item of list) {
             for (let i in item.deps) {
                 if (this.deps[i]) {
-                    if (this.deps[i] != item.deps[i])
+                    if (this.deps[i] !== item.deps[i])
                         throw new Error("Inconsistent free var types!");
                 } else {
                     this.deps[i] = item.deps[i];
@@ -138,7 +138,7 @@ class Expr {
         throw new Error("unimplemented eval in Expr");
     };
     toString() {
-        return depStr() + "<...>";
+        return this.depStr() + "<...>";
     };
 };
 
@@ -163,6 +163,7 @@ class ExprCons extends Expr{
         this.sub = sub;
         // TODO check type! (universe?)
         this.args = args;
+        this.fetchDeps( args );
     };
 
     eval(context) {
