@@ -73,6 +73,10 @@ describe ('Expr', () => {
             }
         ));
 
+        expect( _=>prev.apply({}, uZero) ).to.throw(/Bad arguments/);
+        expect( _=>prev.apply([uZero]) ).to.throw(/Bad arguments/);
+        expect( _=>prev.apply(uZero) ).to.throw(/Bad arguments/);
+
         is( prev.apply({}, [uZero]), uZero );
         is( prev.apply({}, [uOne]), uZero );
         is( prev.apply({}, [uTwo]), uOne );
@@ -84,6 +88,17 @@ describe ('Expr', () => {
         done();
     });
 
+    it ('handles errors', done => {
+        expect( _ => new stlc.ExprMatch( u, 'nat', u.freeVar( 'nat', 'x' ), {} ) )
+            .to.throw(/No mapping.*in pattern match/);
+
+        expect( _ => new stlc.Func(['foo', 'bar'], u.freeVar('nat', 'foo')))
+            .to.throw(/Array of pairs expected/);
+        expect( _ => new stlc.Func([['foo', 'bar']], u.freeVar('nat', 'foo')))
+            .to.throw(/Func: types expected/);
+
+        done();
+    });
 });
 
 function is(got, exp) {
