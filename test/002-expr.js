@@ -77,8 +77,13 @@ describe ('Expr', () => {
         is( prev.apply({}, [uOne]), uZero );
         is( prev.apply({}, [uTwo]), uOne );
 
+        const apply = new stlc.ExprApply( u, 'nat', prev, [u.freeVar('nat', 'x')]);
+
+        is( apply.eval({x : uTwo}), uOne);
+
         done();
     });
+
 });
 
 function is(got, exp) {

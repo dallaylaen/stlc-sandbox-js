@@ -66,4 +66,17 @@ describe( 'Universe', () => {
 
         done();
     });
+
+    it ('has printable vars', done => {
+        const u = new Universe();
+        u.addType( 'nat' ).addCons('zero').addCons('next', 'nat');
+
+        const zero = u.create( 'nat', 'zero' );
+        const one  = u.create( 'nat', 'next', zero );
+
+        expect( zero.toString() ).to.equal('nat.zero');
+        expect( one.toString() ).to.equal('nat.next<nat.zero>');
+
+        done();
+    });
 });

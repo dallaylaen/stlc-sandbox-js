@@ -33,6 +33,9 @@ class Type {
             throw "Attempt to compare Type with a non-type";
         return this.name === other.name; // silly
     };
+    toString() {
+        return this.name;
+    };
 };
 
 class Var {
@@ -44,8 +47,9 @@ class Var {
         this.args = args;
     };
     toString() {
-        return this.type+"."+this.subtype
-            +args.length ? "<"+args.map( x => x.toString() ).join(", ")+">" : "";
+        const args = this.args.map( x => x.toString() );
+        return this.type+"."+this.sub
+            +(args.length ? "<"+args.join(", ")+">" : "");
     };
     eq (other) {
         if (!(other instanceof Var))
