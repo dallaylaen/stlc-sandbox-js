@@ -44,6 +44,7 @@ describe ('Expr', () => {
         const expr = new stlc.ExprCons( u, 'nat', 'next', foo );
 
         expect(expr.toString()).to.equal('nat{foo:nat}<...>');
+        expect(expr.deps).to.deep.equal({ foo : u.type('nat') });
 
         expect( () => { expr.eval({}) } ).to.throw(/Unsatisfied/);
         const one = expr.eval( { foo : uZero } );
@@ -76,6 +77,9 @@ describe ('Expr', () => {
                 next: u.func([['n', 'nat']], u.freeVar('nat', 'n')),
             }
         ));
+
+        // important! function has no external free vars in it
+        expect( prev.deps ).to.deep.equal({});
 
         expect( _=>prev.apply({}, uZero) ).to.throw(/Bad arguments/);
         expect( _=>prev.apply([uZero]) ).to.throw(/Bad arguments/);

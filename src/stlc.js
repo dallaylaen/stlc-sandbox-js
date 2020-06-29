@@ -105,23 +105,26 @@ class Universe {
     };
 };
 
+function fetchDeps(list) {
+    const deps = {};
+    for (let item of list) {
+        for (let i in item.deps) {
+            if (deps[i]) {
+                if (deps[i] !== item.deps[i])
+                    throw new Error("Inconsistent free var types!");
+            } else {
+                deps[i] = item.deps[i];
+            };
+        };
+    };
+    return deps;
+};
+
 class Expr {
     constructor(u, type) {
         this.u    = u;
         this.type = u.type(type);
         this.deps = {};
-    };
-    fetchDeps(list) {
-        for (let item of list) {
-            for (let i in item.deps) {
-                if (this.deps[i]) {
-                    if (this.deps[i] !== item.deps[i])
-                        throw new Error("Inconsistent free var types!");
-                } else {
-                    this.deps[i] = item.deps[i];
-                };
-            };
-        };
     };
     check(context) {
         for( let i in this.deps ) {
@@ -163,7 +166,7 @@ class ExprCons extends Expr{
         this.sub = sub;
         // TODO check type! (universe?)
         this.args = args;
-        this.fetchDeps( args );
+        this.deps = fetchDeps( args );
     };
 
     eval(context) {
@@ -184,6 +187,12 @@ class Func {
         this.args = args;
         this.impl = impl;
         this.type = impl.type;
+
+        const deps = fetchDeps([impl]);
+        for (let i of args) {
+            delete deps[i[0]];
+        };
+        this.deps = deps;
     };
     signature() {
         return this.args.map( x => x[1] );
@@ -206,6 +215,7 @@ class ExprApply extends Expr {
         super( u, type );
         this.func = func;
         this.args = args;
+        this.deps = fetchDeps( [func, ...args] );
     };
     eval (context) {
         return this.func.apply( context, this.args.map( x => x.eval(context) ) )
@@ -224,6 +234,8 @@ class ExprMatch extends Expr {
         };
         this.mapping = mapping;
         this.arg = arg;
+        const funclist = Object.keys(mapping).map( x => mapping[x] );
+        this.deps = fetchDeps( [ arg, ...funclist ] );
     };
 
     eval(context) {
