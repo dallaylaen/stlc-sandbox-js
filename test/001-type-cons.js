@@ -8,13 +8,13 @@ const { Universe, Type, Var } = require( '../src/stlc.js' );
 describe( 'Universe', () => {
     it( 'allows to create types', done => {
         const u = new Universe();
-        u.addType('bool').addCons('true').addCons('false');
-        expect( Object.keys( u.types )).to.deep.equal( ['bool'] );
+        u.addType('Bool').addCons('true').addCons('false');
+        expect( Object.keys( u.types )).to.deep.equal( ['Bool'] );
 
-        const bool = u.type('bool');
+        const Bool = u.type('Bool');
 
-        expect( bool ).to.be.instanceof( Type );
-        expect( bool.list() ).to.deep.equal( ['false', 'true'] );
+        expect( Bool ).to.be.instanceof( Type );
+        expect( Bool.list() ).to.deep.equal( ['false', 'true'] );
 
         u.check();
         done();

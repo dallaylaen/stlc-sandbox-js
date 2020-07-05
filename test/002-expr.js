@@ -7,17 +7,17 @@ const stlc = require( '../src/stlc.js' );
 
 describe ('Expr', () => {
     const u = new stlc.Universe;
-    u.addType('bool').addCons('true').addCons('false');
+    u.addType('Bool').addCons('true').addCons('false');
     u.addType('Nat').addCons('zero').addCons('next', 'Nat');
 
-    const uTrue  = u.create('bool', 'true');
-    const uFalse = u.create('bool', 'false');
+    const uTrue  = u.create('Bool', 'true');
+    const uFalse = u.create('Bool', 'false');
     const uZero  = u.create('Nat',  'zero');
     const uOne   = u.create('Nat',  'next', uZero );
     const uTwo   = u.create('Nat',  'next', uOne );
 
     it( 'can eval with empty context', done => {
-        const expr = new stlc.ExprCons( u, 'bool', 'true' );
+        const expr = new stlc.ExprCons( u, 'Bool', 'true' );
 
         expect( expr.deps ).to.deep.equal( {} );
 
