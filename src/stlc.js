@@ -97,7 +97,7 @@ class Universe {
     create(type, sub, ...args) {
         return new Var( this.types[type], sub, args );
     };
-    freeVar(type, name) {
+    freeVar(name, type) {
         return new ExprFree( this, type, name );
     };
     func(args, impl) {

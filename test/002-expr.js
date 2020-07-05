@@ -54,7 +54,7 @@ describe ('Expr', () => {
     });
 
     it ('can pattern-match', done => {
-        const free = u.freeVar( 'nat', 'foo' );
+        const free = u.freeVar( 'foo', 'nat' );
         const nonzero = new stlc.ExprMatch( u, 'nat', free, {
             zero: new stlc.Func( [], uFalse ),
             next: new stlc.Func( [['unused', u.type('nat')]], uTrue ),
@@ -71,10 +71,10 @@ describe ('Expr', () => {
         const prev = u.func( [['x', 'nat']], new stlc.ExprMatch(
             u,
             'nat',
-            u.freeVar( 'nat', 'x' ),
+            u.freeVar( 'x', 'nat' ),
             {
                 zero: u.func([], uZero),
-                next: u.func([['n', 'nat']], u.freeVar('nat', 'n')),
+                next: u.func([['n', 'nat']], u.freeVar('n', 'nat')),
             }
         ));
 
@@ -89,7 +89,7 @@ describe ('Expr', () => {
         is( prev.apply({}, [uOne]), uZero );
         is( prev.apply({}, [uTwo]), uOne );
 
-        const apply = new stlc.ExprApply( u, 'nat', prev, [u.freeVar('nat', 'x')]);
+        const apply = new stlc.ExprApply( u, 'nat', prev, [u.freeVar('x', 'nat')]);
 
         is( apply.eval({x : uTwo}), uOne);
 
@@ -97,12 +97,12 @@ describe ('Expr', () => {
     });
 
     it ('handles errors', done => {
-        expect( _ => new stlc.ExprMatch( u, 'nat', u.freeVar( 'nat', 'x' ), {} ) )
+        expect( _ => new stlc.ExprMatch( u, 'nat', u.freeVar( 'x', 'nat' ), {} ) )
             .to.throw(/No mapping.*in pattern match/);
 
-        expect( _ => new stlc.Func(['foo', 'bar'], u.freeVar('nat', 'foo')))
+        expect( _ => new stlc.Func(['foo', 'bar'], u.freeVar('foo', 'nat')))
             .to.throw(/Array of pairs expected/);
-        expect( _ => new stlc.Func([['foo', 'bar']], u.freeVar('nat', 'foo')))
+        expect( _ => new stlc.Func([['foo', 'bar']], u.freeVar('foo', 'nat')))
             .to.throw(/Func: types expected/);
 
         done();
