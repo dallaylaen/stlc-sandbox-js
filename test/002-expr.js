@@ -8,13 +8,13 @@ const stlc = require( '../src/stlc.js' );
 describe ('Expr', () => {
     const u = new stlc.Universe;
     u.addType('bool').addCons('true').addCons('false');
-    u.addType('nat').addCons('zero').addCons('next', 'nat');
+    u.addType('Nat').addCons('zero').addCons('next', 'Nat');
 
     const uTrue  = u.create('bool', 'true');
     const uFalse = u.create('bool', 'false');
-    const uZero  = u.create('nat',  'zero');
-    const uOne   = u.create('nat',  'next', uZero );
-    const uTwo   = u.create('nat',  'next', uOne );
+    const uZero  = u.create('Nat',  'zero');
+    const uOne   = u.create('Nat',  'next', uZero );
+    const uTwo   = u.create('Nat',  'next', uOne );
 
     it( 'can eval with empty context', done => {
         const expr = new stlc.ExprCons( u, 'bool', 'true' );
@@ -28,9 +28,9 @@ describe ('Expr', () => {
     } );
 
     it( 'can eval a free variable to itself', done => {
-        const expr = new stlc.ExprFree( u, 'nat', 'foo');
+        const expr = new stlc.ExprFree( u, 'Nat', 'foo');
 
-        expect( expr.toString() ).to.equal('foo:nat');
+        expect( expr.toString() ).to.equal('foo:Nat');
 
         expect( () => { expr.eval({}) } ).to.throw(/Unsatisfied/);
         const one = expr.eval( { foo : uOne } );
@@ -40,11 +40,11 @@ describe ('Expr', () => {
     });
 
     it( 'can eval an expr dependent on free var', done => {
-        const foo = new stlc.ExprFree( u, 'nat', 'foo' );
-        const expr = new stlc.ExprCons( u, 'nat', 'next', foo );
+        const foo = new stlc.ExprFree( u, 'Nat', 'foo' );
+        const expr = new stlc.ExprCons( u, 'Nat', 'next', foo );
 
-        expect(expr.toString()).to.equal('nat{foo:nat}<...>');
-        expect(expr.deps).to.deep.equal({ foo : u.type('nat') });
+        expect(expr.toString()).to.equal('Nat{foo:Nat}<...>');
+        expect(expr.deps).to.deep.equal({ foo : u.type('Nat') });
 
         expect( () => { expr.eval({}) } ).to.throw(/Unsatisfied/);
         const one = expr.eval( { foo : uZero } );
@@ -54,10 +54,10 @@ describe ('Expr', () => {
     });
 
     it ('can pattern-match', done => {
-        const free = u.freeVar( 'foo', 'nat' );
-        const nonzero = new stlc.ExprMatch( u, 'nat', free, {
+        const free = u.freeVar( 'foo', 'Nat' );
+        const nonzero = new stlc.ExprMatch( u, 'Nat', free, {
             zero: new stlc.Func( [], uFalse ),
-            next: new stlc.Func( [['unused', u.type('nat')]], uTrue ),
+            next: new stlc.Func( [['unused', u.type('Nat')]], uTrue ),
         });
 
         expect( nonzero.eval( { foo: uZero } ).eq(uFalse) ).to.equal(true);
@@ -68,13 +68,13 @@ describe ('Expr', () => {
     });
 
     it ('can pattern-match even better', done => {
-        const prev = u.func( [['x', 'nat']], new stlc.ExprMatch(
+        const prev = u.func( [['x', 'Nat']], new stlc.ExprMatch(
             u,
-            'nat',
-            u.freeVar( 'x', 'nat' ),
+            'Nat',
+            u.freeVar( 'x', 'Nat' ),
             {
                 zero: u.func([], uZero),
-                next: u.func([['n', 'nat']], u.freeVar('n', 'nat')),
+                next: u.func([['n', 'Nat']], u.freeVar('n', 'Nat')),
             }
         ));
 
@@ -89,7 +89,7 @@ describe ('Expr', () => {
         is( prev.apply({}, [uOne]), uZero );
         is( prev.apply({}, [uTwo]), uOne );
 
-        const apply = new stlc.ExprApply( u, 'nat', prev, [u.freeVar('x', 'nat')]);
+        const apply = new stlc.ExprApply( u, 'Nat', prev, [u.freeVar('x', 'Nat')]);
 
         is( apply.eval({x : uTwo}), uOne);
 
@@ -97,12 +97,12 @@ describe ('Expr', () => {
     });
 
     it ('handles errors', done => {
-        expect( _ => new stlc.ExprMatch( u, 'nat', u.freeVar( 'x', 'nat' ), {} ) )
+        expect( _ => new stlc.ExprMatch( u, 'Nat', u.freeVar( 'x', 'Nat' ), {} ) )
             .to.throw(/No mapping.*in pattern match/);
 
-        expect( _ => new stlc.Func(['foo', 'bar'], u.freeVar('foo', 'nat')))
+        expect( _ => new stlc.Func(['foo', 'bar'], u.freeVar('foo', 'Nat')))
             .to.throw(/Array of pairs expected/);
-        expect( _ => new stlc.Func([['foo', 'bar']], u.freeVar('foo', 'nat')))
+        expect( _ => new stlc.Func([['foo', 'bar']], u.freeVar('foo', 'Nat')))
             .to.throw(/Func: types expected/);
 
         done();

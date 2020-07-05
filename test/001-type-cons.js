@@ -22,12 +22,12 @@ describe( 'Universe', () => {
 
     it( 'allows to create recursive types', done => {
         const u = new Universe();
-        u.addType('nat').addCons('zero').addCons('next', 'nat');
+        u.addType('Nat').addCons('zero').addCons('next', 'Nat');
 
-        const nat = u.type('nat');
+        const Nat = u.type('Nat');
 
-        expect( nat.cons( 'zero' ) ).to.deep.equal([]);
-        expect( nat.cons( 'next' ) ).to.deep.equal(['nat']);
+        expect( Nat.cons( 'zero' ) ).to.deep.equal([]);
+        expect( Nat.cons( 'next' ) ).to.deep.equal(['Nat']);
 
         u.check();
         done();
@@ -43,22 +43,22 @@ describe( 'Universe', () => {
 
     it( 'can create vars', done => {
         const u = new Universe();
-        u.addType( 'nat' ).addCons('zero').addCons('next', 'nat');
+        u.addType( 'Nat' ).addCons('zero').addCons('next', 'Nat');
 
-        const zero = u.create( 'nat', 'zero' );
-        const one  = u.create( 'nat', 'next', zero );
+        const zero = u.create( 'Nat', 'zero' );
+        const one  = u.create( 'Nat', 'next', zero );
 
         done();
     });
 
     it( 'can compare vars', done => {
         const u = new Universe();
-        u.addType( 'nat' ).addCons('zero').addCons('next', 'nat');
+        u.addType( 'Nat' ).addCons('zero').addCons('next', 'Nat');
 
-        const zero = u.create( 'nat', 'zero' );
-        const one  = u.create( 'nat', 'next', zero );
-        const two  = u.create( 'nat', 'next', one );
-        const zwei = u.create( 'nat', 'next', one );
+        const zero = u.create( 'Nat', 'zero' );
+        const one  = u.create( 'Nat', 'next', zero );
+        const two  = u.create( 'Nat', 'next', one );
+        const zwei = u.create( 'Nat', 'next', one );
 
         expect( zero.eq(one) ).to.equal( false );
         expect(  one.eq(one) ).to.equal( true );
@@ -69,13 +69,13 @@ describe( 'Universe', () => {
 
     it ('has printable vars', done => {
         const u = new Universe();
-        u.addType( 'nat' ).addCons('zero').addCons('next', 'nat');
+        u.addType( 'Nat' ).addCons('zero').addCons('next', 'Nat');
 
-        const zero = u.create( 'nat', 'zero' );
-        const one  = u.create( 'nat', 'next', zero );
+        const zero = u.create( 'Nat', 'zero' );
+        const one  = u.create( 'Nat', 'next', zero );
 
-        expect( zero.toString() ).to.equal('nat.zero');
-        expect( one.toString() ).to.equal('nat.next<nat.zero>');
+        expect( zero.toString() ).to.equal('Nat.zero');
+        expect( one.toString() ).to.equal('Nat.next<Nat.zero>');
 
         done();
     });
