@@ -103,6 +103,9 @@ class Universe {
     func(args, impl) {
         return new Func(args.map( x => [x[0], this.type(x[1])] ), impl);
     };
+    expr(arg) {
+        return new ExpressionParse( this ).parse(arg);
+    };
 };
 
 function fetchDeps(list) {
@@ -241,6 +244,36 @@ class ExprMatch extends Expr {
     eval(context) {
         const cond = this.arg.eval( context );
         return this.mapping[ cond.sub ].apply( context, cond.args );
+    };
+};
+
+class ExpressionParse {
+    constructor( u ) {
+        this.u = u;
+    };
+    parse(arg) {
+        if (!Array.isArray(arg)) {
+            const got = arg.match(/^(\w+)\s*:\s*(\w+)$/);
+            if (!got)
+                throw new Error("argument does not manch 'name: Type': "+arg);
+            const type = got[2];
+            const name = got[1];
+            return new ExprFree(this.u, type, name);
+        };
+
+        // array
+        const [how, ...tail] = arg;
+
+        // TODO pattern match if how == {}
+
+        const maybeCons = how.match( /^(\w+)\.(\w+)$/ );
+        if (maybeCons) {
+            const type = maybeCons[1];
+            const sub  = maybeCons[2];
+            return new ExprCons(this.u, type, sub, ...tail.map(x=>this.parse(x)));
+        };
+
+        throw new Error ("Don't know how to parse "+how);
     };
 };
 
