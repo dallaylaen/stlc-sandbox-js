@@ -63,6 +63,31 @@ describe ('DSL', () => {
 
         done();
     });
+
+    it ('generates applications, too', done => {
+        const json = [
+            'Bool<-apply',
+            [
+                ['n:Nat'],
+                [
+                    'Bool<-match',
+                    'n:Nat',
+                    {
+                        zero: [[], ['Bool.true']],
+                        next: [['n:Nat'], ['Bool.false']],
+                    },
+                ]
+            ],
+            'x:Nat',
+        ];
+
+        const expr = u.expr(json);
+        expect( roundTrip(expr) ).to.deep.equal(json);
+
+        expect( expr.eval( { x: uZero } ) ).to.deep.equal( uTrue );
+
+        done();
+    });
 });
 
 function roundTrip(arg) {

@@ -321,7 +321,8 @@ class ExpressionParse {
         if (maybeApply) {
             const type = maybeApply[1];
             if (maybeApply[2] === 'apply') {
-                return new ExprApply(this.u, type, rest);
+                const [fun, ...arg] = rest;
+                return new ExprApply(this.u, type, fun, arg);
             };
 
             if (maybeApply[2] === 'match') {
