@@ -35,4 +35,17 @@ describe ('DSL', () => {
 
         done();
     });
+
+    it( 'generates functions', done => {
+        const json = [ [ 'x:Nat' ], [ 'Nat.next', 'x:Nat' ] ];
+
+        const expr = u.expr(json);
+        expect( roundTrip(expr) ).to.deep.equal(json);
+
+        done();
+    });
 });
+
+function roundTrip(arg) {
+    return JSON.parse(JSON.stringify(arg));
+};

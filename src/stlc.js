@@ -282,18 +282,19 @@ class ExpressionParse {
         const name = got[1];
         return new ExprFree(this.u, type, name);
     };
-    parse(arg) {
-        if (!Array.isArray(arg))
-            return this.freeVar(arg);
+    parse(json) {
+        if (!Array.isArray(json))
+            return this.freeVar(json);
 
         // array
-        const [how, ...tail] = arg;
+        const [how, ...tail] = json;
 
         if (Array.isArray(how)) {
             // A function
             if (tail.length !== 1)
                 throw new Error("Function body must have 1 element");
-
+            const args = how.map( x => this.freeVar(x) );
+            return new Func( args, this.parse(tail[0]) );
         };
 
         const maybeCons = how.match( /^(\w+)\.(\w+)$/ );
