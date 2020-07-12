@@ -57,7 +57,7 @@ describe ('Expr', () => {
         const free = u.freeVar( 'foo', 'Nat' );
         const nonzero = new stlc.ExprMatch( u, 'Nat', free, {
             zero: new stlc.Func( [], uFalse ),
-            next: new stlc.Func( [['unused', u.type('Nat')]], uTrue ),
+            next: new stlc.Func( [u.freeVar('unused', 'Nat')], uTrue )
         });
 
         expect( nonzero.eval( { foo: uZero } ).eq(uFalse) ).to.equal(true);
@@ -68,13 +68,13 @@ describe ('Expr', () => {
     });
 
     it ('can pattern-match even better', done => {
-        const prev = u.func( [['x', 'Nat']], new stlc.ExprMatch(
+        const prev = u.func( [u.freeVar('x', 'Nat')], new stlc.ExprMatch(
             u,
             'Nat',
             u.freeVar( 'x', 'Nat' ),
             {
                 zero: u.func([], uZero),
-                next: u.func([['n', 'Nat']], u.freeVar('n', 'Nat')),
+                next: u.func([u.freeVar('n', 'Nat')], u.freeVar('n', 'Nat')),
             }
         ));
 
@@ -101,9 +101,9 @@ describe ('Expr', () => {
             .to.throw(/No mapping.*in pattern match/);
 
         expect( _ => new stlc.Func(['foo', 'bar'], u.freeVar('foo', 'Nat')))
-            .to.throw(/Array of pairs expected/);
+            .to.throw(/Array of free vars expected/);
         expect( _ => new stlc.Func([['foo', 'bar']], u.freeVar('foo', 'Nat')))
-            .to.throw(/Func: types expected/);
+            .to.throw(/Array of free vars expected/);
 
         done();
     });

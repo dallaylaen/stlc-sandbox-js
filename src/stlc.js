@@ -101,7 +101,7 @@ class Universe {
         return new ExprFree( this, type, name );
     };
     func(args, impl) {
-        return new Func(args.map( x => [x[0], this.type(x[1])] ), impl);
+        return new Func(args, impl);
     };
     expr(arg) {
         return new ExpressionParse( this ).parse(arg);
@@ -181,24 +181,22 @@ class ExprCons extends Expr{
 class Func {
     constructor( args, impl ) {
         for( let arg of args ) {
-            if (!Array.isArray(arg) || arg.length != 2)
-                throw new Error("Array of pairs expected");
-            if (!(arg[1] instanceof Type))
-                throw new Error("Func: types expected");
+            if (!(arg instanceof ExprFree))
+                throw new Error("Array of free vars expected");
         };
 
         this.args = args;
         this.impl = impl;
-        this.type = impl.type;
+        this.type = impl.type; // TODO wrong!!!
 
         const deps = fetchDeps([impl]);
         for (let i of args) {
-            delete deps[i[0]];
+            delete deps[i.name];
         };
         this.deps = deps;
     };
     signature() {
-        return this.args.map( x => x[1] );
+        return this.args.map( x => x.type );
     };
 
     apply(prevContext, args) {
@@ -207,7 +205,8 @@ class Func {
             throw new Error("Bad arguments, must be Func.apply( {...context}, [...args] )");
         const context = { ...prevContext };
         for ( let i in this.args ) {
-            context[ this.args[i][0] ] = args[i];
+            // TODO compare types
+            context[ this.args[i].name ] = args[i];
         };
         return this.impl.eval( context );
     };
