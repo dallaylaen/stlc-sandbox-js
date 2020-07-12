@@ -46,6 +46,9 @@ class Var {
         this.sub  = sub;
         this.args = args;
     };
+    toJSON() {
+        return [ this.type+"."+this.sub, ...this.args ];
+    };
     toString() {
         const args = this.args.map( x => x.toString() );
         return this.type+"."+this.sub
@@ -146,6 +149,9 @@ class Expr {
     toString() {
         return this.depStr() + "<...>";
     };
+    toJSON () {
+        throw new Error("toJSON unimplemented in "+typeof this);
+    };
 };
 
 class ExprFree extends Expr {
@@ -159,6 +165,9 @@ class ExprFree extends Expr {
         return context[ this.name ];
     };
     toString() {
+        return this.name + ":" + this.type;
+    };
+    toJSON() {
         return this.name + ":" + this.type;
     };
 };
@@ -175,6 +184,10 @@ class ExprCons extends Expr{
     eval(context) {
         this.check(context);
         return new Var( this.type, this.sub, this.args.map( x=>x.eval(context) ) );
+    };
+    toJSON () {
+        // What about deps? Deducible from the arg list!
+        return [ this.type + "." + this.sub, ...this.args ];
     };
 };
 
@@ -210,6 +223,10 @@ class Func {
         };
         return this.impl.eval( context );
     };
+
+    toJSON() {
+        return [this.args, this.impl];
+    };
 };
 
 class ExprApply extends Expr {
@@ -221,6 +238,9 @@ class ExprApply extends Expr {
     };
     eval (context) {
         return this.func.apply( context, this.args.map( x => x.eval(context) ) )
+    };
+    toJSON() {
+        return [ this.type + '<-' + 'apply', this.func, ...this.args ];
     };
 };
 
@@ -243,6 +263,10 @@ class ExprMatch extends Expr {
     eval(context) {
         const cond = this.arg.eval( context );
         return this.mapping[ cond.sub ].apply( context, cond.args );
+    };
+
+    toJSON() {
+        return [ this.type + '<-' + 'match', this.arg, this.mapping ];
     };
 };
 

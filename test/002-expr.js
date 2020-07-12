@@ -16,6 +16,14 @@ describe ('Expr', () => {
     const uOne   = u.create('Nat',  'next', uZero );
     const uTwo   = u.create('Nat',  'next', uOne );
 
+    it( 'can json constants', done => {
+        expect( roundTrip(uZero) ).to.deep.equal([ 'Nat.zero' ]);
+        expect( roundTrip(uTwo) ).to.deep.equal(
+            [ 'Nat.next', [ 'Nat.next', [ 'Nat.zero' ]]] );
+
+        done();
+    });
+
     it( 'can eval with empty context', done => {
         const expr = new stlc.ExprCons( u, 'Bool', 'true' );
 
@@ -23,6 +31,8 @@ describe ('Expr', () => {
 
         expect( expr.eval({foo: uOne}).eq(uTrue) ).to.equal(true);
         expect( expr.eval({foo: uOne}).eq(uFalse) ).to.equal(false);
+
+        expect( expr.toJSON() ).to.deep.equal([ 'Bool.true' ]);
 
         done();
     } );
@@ -85,13 +95,26 @@ describe ('Expr', () => {
         expect( _=>prev.apply([uZero]) ).to.throw(/Bad arguments/);
         expect( _=>prev.apply(uZero) ).to.throw(/Bad arguments/);
 
-        is( prev.apply({}, [uZero]), uZero );
-        is( prev.apply({}, [uOne]), uZero );
-        is( prev.apply({}, [uTwo]), uOne );
+        expect( prev.apply({}, [uZero]) ).to.deep.equal( uZero );
+        expect( prev.apply({}, [uOne])  ).to.deep.equal( uZero );
+        expect( prev.apply({}, [uTwo])  ).to.deep.equal( uOne );
 
         const apply = new stlc.ExprApply( u, 'Nat', prev, [u.freeVar('x', 'Nat')]);
 
-        is( apply.eval({x : uTwo}), uOne);
+        expect( apply.eval({x : uTwo}) ).to.deep.equal( uOne );
+
+        expect( JSON.parse(JSON.stringify( apply )) ).to.deep.equal( [
+            'Nat<-apply', [
+                [ 'x:Nat'],
+                [
+                    'Nat<-match', 'x:Nat', {
+                        "zero": [ [], [ 'Nat.zero' ] ],
+                        "next": [ ['n:Nat'], 'n:Nat' ],
+                    },
+                ],
+            ],
+            'x:Nat',
+        ] );
 
         done();
     });
@@ -109,6 +132,6 @@ describe ('Expr', () => {
     });
 });
 
-function is(got, exp) {
-    expect( exp.eq(got) ).to.equal(true);
+function roundTrip(arg) {
+    return JSON.parse(JSON.stringify(arg));
 };
