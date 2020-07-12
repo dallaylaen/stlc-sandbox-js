@@ -251,20 +251,27 @@ class ExpressionParse {
     constructor( u ) {
         this.u = u;
     };
+    freeVar( arg ) {
+        const got = arg.match(/^(\w+)\s*:\s*(\w+)$/);
+        if (!got)
+            throw new Error("argument does not manch 'name: Type': "+arg);
+        const type = got[2];
+        const name = got[1];
+        return new ExprFree(this.u, type, name);
+    };
     parse(arg) {
-        if (!Array.isArray(arg)) {
-            const got = arg.match(/^(\w+)\s*:\s*(\w+)$/);
-            if (!got)
-                throw new Error("argument does not manch 'name: Type': "+arg);
-            const type = got[2];
-            const name = got[1];
-            return new ExprFree(this.u, type, name);
-        };
+        if (!Array.isArray(arg))
+            return this.freeVar(arg);
 
         // array
         const [how, ...tail] = arg;
 
-        // TODO pattern match if how == {}
+        if (Array.isArray(how)) {
+            // A function
+            if (tail.length !== 1)
+                throw new Error("Function body must have 1 element");
+
+        };
 
         const maybeCons = how.match( /^(\w+)\.(\w+)$/ );
         if (maybeCons) {
