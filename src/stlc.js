@@ -283,26 +283,55 @@ class ExpressionParse {
         return new ExprFree(this.u, type, name);
     };
     parse(json) {
-        if (!Array.isArray(json))
+        if (!Array.isArray(json)) {
+            // body of a pattern match
+            if (typeof json === 'object') {
+                const store = {};
+                for (let i in json) {
+                    store[i] = this.parse(json[i]);
+                }
+                return store;
+            };
+
+            // free var
             return this.freeVar(json);
+        };
 
         // array
         const [how, ...tail] = json;
+        const rest = tail.map(x=>this.parse(x));
 
         if (Array.isArray(how)) {
             // A function
-            if (tail.length !== 1)
+            if (rest.length !== 1)
                 throw new Error("Function body must have 1 element");
             const args = how.map( x => this.freeVar(x) );
-            return new Func( args, this.parse(tail[0]) );
+            return new Func( args, rest[0] );
         };
 
         const maybeCons = how.match( /^(\w+)\.(\w+)$/ );
         if (maybeCons) {
             const type = maybeCons[1];
             const sub  = maybeCons[2];
-            return new ExprCons(this.u, type, sub, ...tail.map(x=>this.parse(x)));
+            return new ExprCons(this.u, type, sub, ...rest);
         };
+
+        // Type<-apply, Type<-match
+        const maybeApply = how.match( /^(\w+)<-(\w+)$/ );
+        if (maybeApply) {
+            const type = maybeApply[1];
+            if (maybeApply[2] === 'apply') {
+                return new ExprApply(this.u, type, rest);
+            };
+
+            if (maybeApply[2] === 'match') {
+                if (rest.length !== 2 || typeof rest[1] !== 'object')
+                    throw new Error("pattern match must be [expr, {}]");
+
+                return new ExprMatch( this.u, type, ...rest );
+            };
+        };
+
 
         throw new Error ("Don't know how to parse "+how);
     };

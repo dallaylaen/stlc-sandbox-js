@@ -44,6 +44,25 @@ describe ('DSL', () => {
 
         done();
     });
+
+    it ('generates pattern matches', done => {
+        // isZero function
+        const json = [
+            'Bool<-match',
+            'x:Nat', {
+                zero: [ [], [ 'Bool.true' ] ],
+                next: [ [ 'n:Nat' ], [ 'Bool.false' ] ],
+            },
+        ];
+
+        const expr = u.expr(json);
+        expect( roundTrip(expr) ).to.deep.equal(json);
+
+        expect( expr.eval( { x: uZero } ) ).to.deep.equal( uTrue );
+        expect( expr.eval( { x: uOne } ) ).to.deep.equal( uFalse );
+
+        done();
+    });
 });
 
 function roundTrip(arg) {
